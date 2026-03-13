@@ -1,0 +1,2016 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Château Marius — Devis Événements</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0d0d0d;
+    --bg2: #141414;
+    --bg3: #1a1a1a;
+    --bg4: #222222;
+    --border: #2a2a2a;
+    --border2: #333;
+    --red: #9a2243;
+    --red-light: #b74162;
+    --red-dim: rgba(154,34,67,0.15);
+    --red-dim2: rgba(154,34,67,0.08);
+    --text: #e8e0d8;
+    --text2: #a09890;
+    --text3: #6a6260;
+    --gold: #c9a96e;
+    --gold-dim: rgba(201,169,110,0.12);
+    --success: #4a9e6e;
+    --success-dim: rgba(74,158,110,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: 
+      radial-gradient(ellipse 60% 40% at 15% 0%, rgba(154,34,67,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 60% at 85% 100%, rgba(154,34,67,0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── LAYOUT ── */
+  .app { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .sidebar-logo {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo .chateau {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.05em;
+    line-height: 1.1;
+  }
+  .sidebar-logo .subtitle {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-top: 4px;
+  }
+
+  .sidebar-section { padding: 16px 16px 8px; }
+  .sidebar-section-title {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text);
+    margin-bottom: 10px;
+    padding-left: 8px;
+  }
+
+  .devis-list { display: flex; flex-direction: column; gap: 4px; }
+
+  .devis-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+    position: relative;
+  }
+  .devis-item:hover { background: var(--bg3); }
+  .devis-item.active {
+    background: var(--red-dim);
+    border-color: rgba(154,34,67,0.3);
+  }
+  .devis-item .devis-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text3);
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .devis-item.active .devis-dot { background: var(--red); }
+  .devis-item .devis-name {
+    font-size: 13px;
+    color: var(--text2);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .devis-item.active .devis-name { color: var(--text); }
+  .devis-item .devis-total-badge {
+    font-size: 11px;
+    color: var(--text3);
+    flex-shrink: 0;
+  }
+  .devis-item.active .devis-total-badge { color: var(--red-light); }
+  .devis-item .delete-devis-btn {
+    opacity: 0;
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 2px;
+    line-height: 1;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .devis-item:hover .delete-devis-btn { opacity: 1; }
+  .devis-item .delete-devis-btn:hover { color: var(--red-light); }
+
+  .btn-new-devis {
+    margin: 8px 16px;
+    padding: 10px 16px;
+    background: var(--red-dim);
+    border: 1px dashed rgba(154,34,67,0.4);
+    border-radius: 6px;
+    color: var(--red-light);
+    font-family: 'Jost', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: calc(100% - 32px);
+    text-align: center;
+  }
+  .btn-new-devis:hover { background: rgba(154,34,67,0.25); border-style: solid; }
+
+  .sidebar-bottom {
+    margin-top: auto;
+    padding: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .sidebar-bottom .version {
+    font-size: 10px;
+    color: var(--text3);
+    text-align: center;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── MAIN ── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .topbar-title-wrap { flex: 1; display: flex; align-items: center; gap: 12px; }
+
+  .topbar-devis-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--text);
+    border: none;
+    background: transparent;
+    outline: none;
+    cursor: text;
+    min-width: 120px;
+    max-width: 340px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+  .topbar-devis-name:hover { background: var(--bg3); }
+  .topbar-devis-name:focus { background: var(--bg3); border-bottom: 1px solid var(--red); }
+
+  .topbar-date {
+    font-size: 12px;
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .topbar-date input[type="date"] {
+    background: transparent;
+    border: none;
+    color: var(--text2);
+    font-family: 'Jost', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    outline: none;
+    color-scheme: dark;
+  }
+
+  .topbar-actions { display: flex; gap: 8px; }
+
+  .btn-icon {
+    width: 34px; height: 34px;
+    border-radius: 6px;
+    border: 1px solid var(--border2);
+    background: var(--bg3);
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .btn-icon:hover { background: var(--bg4); color: var(--text); border-color: var(--text3); }
+
+  .btn-print {
+    padding: 0 16px;
+    height: 34px;
+    border-radius: 6px;
+    border: none;
+    background: var(--red);
+    color: white;
+    font-family: 'Jost', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: all 0.2s;
+  }
+  .btn-print:hover { background: var(--red-light); }
+
+  /* ── CONTENT ── */
+  .content { flex: 1; display: grid; grid-template-columns: 1fr 340px; overflow: hidden; }
+
+  .editor-pane {
+    overflow-y: auto;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .summary-pane {
+    background: var(--bg2);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ── CLIENT INFO ── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-title {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .icon { color: var(--red); font-size: 13px; }
+
+  .client-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .client-field {
+    padding: 14px 20px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .client-field:nth-child(even) { border-right: none; }
+  .client-field:nth-last-child(-n+2) { border-bottom: none; }
+  .client-field label {
+    display: block;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .client-field input, .client-field select {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'Jost', sans-serif;
+    font-size: 13px;
+    width: 100%;
+    transition: color 0.15s;
+  }
+  .client-field input::placeholder { color: var(--text3); }
+  .client-field input:focus { color: var(--text); }
+  .client-field select { cursor: pointer; color-scheme: dark; }
+  .client-field select option { background: var(--bg3); }
+
+  /* ── LIGNES DEVIS ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0;
+  }
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-label .icon { color: var(--red); }
+
+  /* Category blocks */
+  .category-block { display: flex; flex-direction: column; gap: 2px; }
+
+  .category-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+    margin-bottom: 0;
+  }
+  .category-header:hover { background: var(--bg4); }
+  .category-header .cat-icon { font-size: 14px; }
+  .category-header .cat-name {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text);
+    flex: 1;
+  }
+  .category-header .cat-total {
+    font-size: 13px;
+    color: var(--gold);
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+  }
+  .category-header .cat-chevron {
+    color: var(--text3);
+    font-size: 11px;
+    transition: transform 0.2s;
+  }
+  .category-header.collapsed .cat-chevron { transform: rotate(-90deg); }
+
+  .lines-table-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    overflow: hidden;
+  }
+  .lines-table-wrap.hidden { display: none; }
+
+  .lines-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .lines-table thead tr {
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+  }
+  .lines-table thead th {
+    padding: 8px 12px;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text3);
+    font-weight: 400;
+    text-align: left;
+  }
+  .lines-table thead th:nth-child(2),
+  .lines-table thead th:nth-child(3),
+  .lines-table thead th:nth-child(4),
+  .lines-table thead th:nth-child(5) { text-align: center; }
+
+  .lines-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .lines-table tbody tr:last-child { border-bottom: none; }
+  .lines-table tbody tr:hover { background: var(--red-dim2); }
+
+  .lines-table td { padding: 8px 12px; vertical-align: middle; }
+
+  .td-desc { width: 35%; }
+  .td-unit { width: 14%; text-align: right; }
+  .td-qty { width: 10%; text-align: right; }
+  .td-discount { width: 12%; text-align: right; }
+  .td-total { width: 15%; text-align: right; }
+  .td-actions { width: 6%; text-align: center; }
+
+  .td-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'Jost', sans-serif;
+    font-size: 13px;
+    width: 100%;
+    transition: all 0.15s;
+    padding: 3px 0;
+  }
+  .td-input::placeholder { color: var(--text3); }
+  .td-input:focus {
+    border-bottom: 1px solid var(--red);
+    color: var(--text);
+  }
+  .td-input.right { text-align: center; }
+
+  .line-total-val {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    color: var(--text);
+    font-weight: 600;
+  }
+  .line-total-val.positive { color: var(--gold); }
+
+  .btn-delete-line {
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.15s;
+    line-height: 1;
+  }
+  .btn-delete-line:hover { color: var(--red-light); background: var(--red-dim); }
+
+  /* Catalogue rows (preset items) */
+  .catalogue-row { background: var(--red-dim2); }
+  .catalogue-badge {
+    display: inline-block;
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--red);
+    background: var(--red-dim);
+    padding: 2px 5px;
+    border-radius: 3px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  /* Add row buttons */
+  .add-row-bar {
+    padding: 8px 12px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-top: 1px dashed var(--border2);
+    border-radius: 0 0 8px 8px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .add-row-bar.hidden { display: none; }
+
+  .btn-add-line {
+    display: flex; align-items: center; gap: 5px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    font-family: 'Jost', sans-serif;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-add-line:hover { background: var(--red-dim); border-color: rgba(154,34,67,0.4); color: var(--red-light); }
+
+  /* Catalogue picker */
+  .catalogue-picker {
+    position: absolute;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    z-index: 200;
+    width: 300px;
+    max-height: 340px;
+    overflow-y: auto;
+    display: none;
+  }
+  .catalogue-picker.open { display: block; }
+  .catalogue-picker-header {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+  .catalogue-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 0.1s;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .catalogue-item:last-child { border-bottom: none; }
+  .catalogue-item:hover { background: var(--red-dim); }
+  .catalogue-item .ci-name { font-size: 13px; color: var(--text); }
+  .catalogue-item .ci-price { font-size: 12px; color: var(--text3); }
+
+  /* ── SUMMARY PANE ── */
+  .summary-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .summary-subtitle {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .summary-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 4px 0;
+  }
+
+  .summary-cat-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 0;
+  }
+  .summary-cat-label {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .summary-cat-label .icon { font-size: 13px; }
+  .summary-cat-amount {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px;
+    color: var(--text2);
+    font-weight: 600;
+  }
+  .summary-cat-amount.nonzero { color: var(--gold); }
+
+  /* Global discount */
+  .global-discount-block {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .global-discount-title {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text);
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .global-discount-title .icon { color: var(--red); }
+
+  .discount-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .discount-row:last-child { margin-bottom: 0; }
+  .discount-row label { font-size: 12px; color: var(--text); }
+  .discount-input-wrap {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .discount-input {
+    width: 60px;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: 'Jost', sans-serif;
+    font-size: 13px;
+    padding: 5px 8px;
+    text-align: right;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .discount-input:focus { border-color: var(--red); }
+  .discount-symbol { font-size: 12px; color: var(--text3); }
+  .discount-result {
+    font-size: 12px;
+    color: var(--red-light);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: right;
+  }
+
+  /* Totals */
+  .totals-block {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .total-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .total-line:last-child { border-bottom: none; }
+  .total-line.grand {
+    background: var(--red);
+    padding: 14px 16px;
+  }
+  .total-label { font-size: 12px; color: var(--text); }
+  .total-label.grand { color: rgba(255,255,255,0.85); font-weight: 500; }
+  .total-amount {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    color: var(--text);
+    font-weight: 600;
+  }
+  .total-amount.grand { color: white; font-size: 22px; }
+  .total-amount.discount-line { color: var(--red-light); }
+
+  /* Notes */
+  .notes-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .notes-label {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+  .notes-textarea {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text2);
+    font-family: 'Jost', sans-serif;
+    font-size: 12px;
+    line-height: 1.6;
+    padding: 12px;
+    resize: none;
+    height: 90px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .notes-textarea:focus { border-color: rgba(154,34,67,0.4); color: var(--text); }
+  .notes-textarea::placeholder { color: var(--text3); }
+
+  /* Status */
+  .status-select {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text2);
+    font-family: 'Jost', sans-serif;
+    font-size: 12px;
+    padding: 10px 12px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    color-scheme: dark;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236a6260' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+  .status-select:focus { border-color: var(--red); }
+  .status-select option { background: var(--bg3); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 9999;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast .toast-icon { color: var(--success); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 60px 24px;
+    color: var(--text3);
+    text-align: center;
+  }
+  .empty-state .big-icon { font-size: 40px; opacity: 0.4; }
+  .empty-state p { font-size: 13px; line-height: 1.6; }
+
+  /* ── PRINT ── */
+  @media print {
+    body { background: white; color: #111; }
+    body::before { display: none; }
+    .sidebar, .topbar, .summary-pane, .add-row-bar, .btn-delete-line, .btn-add-line, .toast { display: none !important; }
+    .app { display: block; }
+    .content { display: block; }
+    .editor-pane { padding: 0; overflow: visible; }
+    .card, .lines-table-wrap, .category-header, .lines-table td, .lines-table th { background: white !important; color: #111 !important; border-color: #ddd !important; }
+    .card-title, .section-label, .cat-name, .cat-total { color: #555 !important; }
+    .client-field label, .lines-table thead th { color: #888 !important; }
+    .td-input, .client-field input, .client-field select { color: #111 !important; }
+    .line-total-val, .cat-total, .total-amount { color: #9a2243 !important; }
+    .total-line.grand { background: #9a2243 !important; }
+    .total-line.grand .total-label, .total-line.grand .total-amount { color: white !important; }
+    .print-summary-block { display: block !important; }
+  }
+
+  .print-summary-block { display: none; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+  /* Collapse animation */
+  .lines-table-wrap, .add-row-bar { transition: none; }
+
+  /* Contacts section */
+  .client-field.full-width {
+    grid-column: 1 / -1;
+    border-right: none;
+  }
+  .contacts-section {
+    border-top: 1px solid var(--border);
+    padding: 14px 20px;
+  }
+  .contacts-header {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .contacts-grid { display: flex; flex-direction: column; gap: 8px; }
+  .contact-row {
+    display: grid;
+    grid-template-columns: 24px 1fr 1fr 1fr;
+    gap: 12px;
+    align-items: center;
+  }
+  .contact-index {
+    font-size: 11px;
+    color: var(--text3);
+    text-align: center;
+    font-weight: 500;
+  }
+  .contact-input {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 7px 10px;
+    font-size: 13px;
+  }
+  .contact-input:focus { border-color: rgba(154,34,67,0.5); background: var(--bg4); }
+
+  /* Topbar employe input */
+  .topbar-devis-employe {
+    font-family: 'Jost', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text2);
+    border: none;
+    background: transparent;
+    outline: none;
+    cursor: text;
+    min-width: 100px;
+    max-width: 200px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+  .topbar-devis-employe::placeholder { color: var(--text3); }
+  .topbar-devis-employe:hover { background: var(--bg3); }
+  .topbar-devis-employe:focus { background: var(--bg3); border-bottom: 1px solid rgba(154,34,67,0.5); }
+
+  /* ── GROUPS ── */
+  .group-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 8px;
+  }
+  .group-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    background: var(--red-dim);
+    border: 1px solid rgba(154,34,67,0.35);
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .group-header:hover { background: rgba(154,34,67,0.22); }
+  .group-icon { font-size: 15px; }
+  .group-name {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+  .group-total {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gold);
+  }
+  .group-chevron {
+    color: var(--red-light);
+    font-size: 11px;
+    transition: transform 0.2s;
+  }
+  .group-header.collapsed .group-chevron { transform: rotate(-90deg); }
+  .group-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-left: 16px;
+    border-left: 2px solid rgba(154,34,67,0.2);
+    margin-left: 8px;
+  }
+  .group-body.hidden { display: none; }
+  .summary-group-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .summary-group-line:last-child { border-bottom: none; }
+
+  .collapsible-card-header {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .collapsible-card-header:hover { background: var(--bg3); }
+  .card-chevron {
+    color: var(--text3);
+    font-size: 11px;
+    transition: transform 0.2s;
+  }
+  .collapsible-card-body.hidden { display: none; }
+  #clientCardBody.hidden { display: none; }
+
+  .yesno-check {
+    width: 16px; height: 16px;
+    accent-color: var(--red);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="chateau">Château Marius</div>
+      <div class="subtitle">Devis Événements</div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Mes devis</div>
+      <div class="devis-list" id="duvisList"></div>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="version">v1.0 — Château Marius</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-title-wrap">
+        <input class="topbar-devis-name" id="topbarName" type="text" placeholder="Nom de l'événement…" oninput="updateDevisField('name', this.value)" />
+        <input class="topbar-devis-employe" id="topbarEmploye" type="text" placeholder="Créé par…" oninput="updateDevisField('employe', this.value)" />
+        <div class="topbar-date">
+          <span>📅</span>
+          <input type="date" id="topbarDateCreation" onchange="updateDevisField('dateCreation', this.value)" />
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-print" onclick="exportPNG(false)" id="btnPng">🖼️ Export client</button>
+        <button class="btn-print" onclick="exportPNG(true)" id="btnPngInternal" style="background:var(--bg4);border-color:rgba(154,34,67,0.4)">🔒 Usage interne</button>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+      <!-- EDITOR -->
+      <div class="editor-pane" id="editorPane">
+        <div class="empty-state" id="emptyState">
+          <div class="big-icon">📋</div>
+          <p>Aucun devis sélectionné.<br>Créez un nouveau devis ou sélectionnez-en un dans la liste.</p>
+          <button class="btn-print" style="margin-top:8px" onclick="createDevis()">+ Nouveau devis</button>
+        </div>
+      </div>
+
+      <!-- SUMMARY -->
+      <div class="summary-pane" id="summaryPane">
+        <div class="summary-title">Récapitulatif</div>
+        <div class="summary-subtitle">Totaux par catégorie</div>
+        <hr class="summary-divider">
+        <div id="summaryCategories"></div>
+        <hr class="summary-divider">
+        <div class="global-discount-block">
+          <div class="global-discount-title"><span class="icon">🏷️</span> Remise globale</div>
+          <div class="discount-row">
+            <label>Remise (%)</label>
+            <div class="discount-input-wrap">
+              <input class="discount-input" type="number" id="globalDiscountPct" min="0" max="100" value="0" oninput="updateTotals()" />
+              <span class="discount-symbol">%</span>
+            </div>
+          </div>
+          <div class="discount-row">
+            <label>Remise ($)</label>
+            <div class="discount-input-wrap">
+              <input class="discount-input" type="number" id="globalDiscountAbs" min="0" value="0" oninput="updateTotals()" />
+              <span class="discount-symbol">$</span>
+            </div>
+          </div>
+          <div class="discount-row" style="margin-top:6px">
+            <label style="color:var(--text3)">Économie totale</label>
+            <span class="discount-result" id="discountSaving">— $</span>
+          </div>
+        </div>
+        <div class="totals-block" id="totalsBlock">
+          <div class="total-line">
+            <span class="total-label">Sous-total</span>
+            <span class="total-amount" id="subtotalDisplay">0.00 $</span>
+          </div>
+          <div class="total-line" id="discountLineEl" style="display:none">
+            <span class="total-label">Remise</span>
+            <span class="total-amount discount-line" id="discountLineDisplay">— $</span>
+          </div>
+          <div class="total-line grand">
+            <span class="total-label grand">TOTAL GÉNÉRAL</span>
+            <span class="total-amount grand" id="grandTotalDisplay">0.00 $</span>
+          </div>
+        </div>
+        <div class="notes-block">
+          <div class="notes-label">Notes internes</div>
+          <textarea class="notes-textarea" id="notesArea" placeholder="Remarques, conditions, détails spéciaux…"></textarea>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CATALOGUE PICKER (shared, moved by JS) -->
+<div class="catalogue-picker" id="cataloguePicker">
+  <div class="catalogue-picker-header">Sélectionner une prestation</div>
+  <div id="catalogueItems"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="toast-icon">✓</span>
+  <span id="toastMsg">Sauvegardé</span>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// CATALOGUE DE PRESTATIONS
+// ════════════════════════════════════════
+// Groupes de catégories
+const GROUPS = [
+  { id: "denrees",    label: "Denrées",               icon: "🥘", collapsed: false },
+  { id: "services",   label: "Services",               icon: "📋", collapsed: false },
+  { id: "decoration", label: "Décoration",             icon: "🌿", collapsed: false },
+  { id: "personnel",  label: "Personnel & véhicules",  icon: "🧑‍🍳", collapsed: false },
+];
+
+// Types de catégorie :
+//   "free"      = prix + quantité libres
+//   "fixed"     = prix unitaire fixe, quantité libre
+//   "yesno"     = case à cocher oui/non, pas de prix
+const CATALOGUE = {
+  "Plats":                 { group: "denrees",    icon: "🍽️", type: "free",  fixedUnit: null,  unitLabel: "/ plat" },
+  "Boissons":              { group: "denrees",    icon: "🍹", type: "free",  fixedUnit: null,  unitLabel: "/ btl" },
+  "Paniers":               { group: "denrees",    icon: "🧺", type: "fixed", fixedUnit: 50,    unitLabel: "$ / unité" },
+  "Ardoise":               { group: "services",   icon: "📋", type: "yesno", fixedUnit: null,  unitLabel: "" },
+  "Facture individuelle":  { group: "services",   icon: "🧾", type: "yesno", fixedUnit: null,  unitLabel: "" },
+  "Paniers spéciaux":      { group: "services",   icon: "🎁", type: "free",  fixedUnit: null,  unitLabel: "/ unité" },
+  "Étiquettage paniers":   { group: "services",   icon: "🏷️", type: "fixed", fixedUnit: 10,    unitLabel: "$ / panier" },
+  "Visite du domaine":     { group: "services",   icon: "🏰", type: "fixed", fixedUnit: 2500,  unitLabel: "$ / forfait" },
+  "Décoration simple":     { group: "decoration", icon: "🌿", type: "free",  fixedUnit: null,  unitLabel: "/ forfait" },
+  "Décoration moyenne":    { group: "decoration", icon: "✨", type: "free",  fixedUnit: null,  unitLabel: "/ forfait" },
+  "Décoration complexe":   { group: "decoration", icon: "💐", type: "free",  fixedUnit: null,  unitLabel: "/ forfait" },
+  "Régie en différé":      { group: "decoration", icon: "🎬", type: "free",  fixedUnit: null,  unitLabel: "/ h" },
+  "Régie en direct":       { group: "decoration", icon: "🎥", type: "free",  fixedUnit: null,  unitLabel: "/ h" },
+  "Serveur à disposition": { group: "personnel",  icon: "🧑‍🍳", type: "fixed", fixedUnit: 1000,  unitLabel: "$ / serveur" },
+  "Véhicule":              { group: "personnel",  icon: "🚐", type: "fixed", fixedUnit: 1500,  unitLabel: "$ / véhicule" },
+};
+
+// ════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════
+let state = {
+  devisList: [],
+  currentId: null,
+};
+
+function getDevis(id) { return state.devisList.find(d => d.id === id); }
+function getCurrentDevis() { return getDevis(state.currentId); }
+
+function makeId() { return 'D' + Date.now() + Math.floor(Math.random() * 1000); }
+function makeLineId() { return 'L' + Date.now() + Math.floor(Math.random() * 9999); }
+
+function createDevis() {
+  const today = new Date().toISOString().slice(0, 10);
+  const d = {
+    id: makeId(),
+    name: "",
+    employe: "",
+    dateCreation: today,
+    client: {
+      organisateur: "",
+      typeOrganisateur: "",
+      contacts: [
+        { nom: "", prenom: "", tel: "" },
+        { nom: "", prenom: "", tel: "" },
+        { nom: "", prenom: "", tel: "" },
+      ],
+      dateEvenement: "",
+      heureEvenement: "",
+      nbPersonnes: "",
+      typeEvenement: "",
+    },
+    groups: GROUPS.map(g => ({ ...g, collapsed: true })),
+    categories: Object.keys(CATALOGUE).map(cat => ({
+      id: cat,
+      lines: [],
+      collapsed: false,
+    })),
+    globalDiscountPct: 0,
+    globalDiscountAbs: 0,
+    notes: "",
+    status: "brouillon",
+  };
+  state.devisList.unshift(d);
+  selectDevis(d.id);
+}
+
+function selectDevis(id) {
+  state.currentId = id;
+  renderSidebar();
+  renderEditor();
+  renderSummary();
+}
+
+function deleteDevis(id, e) {
+  e.stopPropagation();
+  if (state.devisList.length === 1) { showToast("Impossible de supprimer le dernier devis"); return; }
+  if (!confirm("Supprimer ce devis ?")) return;
+  state.devisList = state.devisList.filter(d => d.id !== id);
+  if (state.currentId === id) {
+    state.currentId = state.devisList[0]?.id || null;
+  }
+  saveAll();
+  renderSidebar();
+  renderEditor();
+  renderSummary();
+}
+
+function duplicateCurrentDevis() {
+  const d = getCurrentDevis();
+  if (!d) return;
+  const copy = JSON.parse(JSON.stringify(d));
+  copy.id = makeId();
+  copy.name = d.name + " (copie)";
+  state.devisList.unshift(copy);
+  selectDevis(copy.id);
+  saveAll();
+  showToast("Devis dupliqué !");
+}
+
+// ════════════════════════════════════════
+// CALCULATIONS
+// ════════════════════════════════════════
+function calcLineTotal(line) {
+  const catMeta = CATALOGUE[line.catId] || {};
+  const catType = catMeta.type || 'free';
+  if (catType === 'yesno') return 0;
+  const unit = catType === 'fixed' ? (catMeta.fixedUnit || 0) : (parseFloat(line.unit) || 0);
+  const sub = unit * (parseFloat(line.qty) || 0);
+  const disc = Math.min(parseFloat(line.discount) || 0, 100);
+  return sub * (1 - disc / 100);
+}
+
+function calcCatTotal(cat) {
+  return cat.lines.reduce((s, l) => s + calcLineTotal(l), 0);
+}
+
+function calcSubtotal(d) {
+  return d.categories.reduce((s, cat) => s + calcCatTotal(cat), 0);
+}
+
+function calcDiscount(d) {
+  const sub = calcSubtotal(d);
+  const pctDisc = sub * (Math.min(parseFloat(d.globalDiscountPct) || 0, 100) / 100);
+  const absDisc = Math.min(parseFloat(d.globalDiscountAbs) || 0, sub);
+  return pctDisc + absDisc;
+}
+
+function calcGrandTotal(d) {
+  return Math.max(0, calcSubtotal(d) - calcDiscount(d));
+}
+
+function fmt(n) { return "$ " + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'"); }
+
+// ════════════════════════════════════════
+// SIDEBAR
+// ════════════════════════════════════════
+function renderSidebar() {
+  const list = document.getElementById('duvisList');
+  if (!list) return;
+  list.innerHTML = '';
+  state.devisList.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'devis-item' + (d.id === state.currentId ? ' active' : '');
+    el.onclick = () => selectDevis(d.id);
+    const total = calcGrandTotal(d);
+    el.innerHTML = `
+      <div class="devis-dot"></div>
+      <div class="devis-name">${escHtml(d.name)}</div>
+      <div class="devis-total-badge">${total > 0 ? fmt(total) : ''}</div>
+    `;
+    list.appendChild(el);
+  });
+}
+
+// ════════════════════════════════════════
+// EDITOR
+// ════════════════════════════════════════
+function renderEditor() {
+  const pane = document.getElementById('editorPane');
+  const empty = document.getElementById('emptyState');
+  const d = getCurrentDevis();
+  if (!d) {
+    if (empty) empty.style.display = '';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+
+  // Set topbar
+  document.getElementById('topbarName').value = d.name;
+  document.getElementById('topbarEmploye').value = d.employe || '';
+  document.getElementById('topbarDateCreation').value = d.dateCreation || '';
+
+  // If already rendered, just sync values without rebuilding DOM
+  if (pane.querySelector('.card')) {
+    syncClientFields(d);
+    updateTotals();
+    return;
+  }
+
+  // Build sections (first render only)
+  let html = '';
+
+  // Client info card
+  html += `
+  <div class="card" id="clientCard">
+    <div class="card-header collapsible-card-header" onclick="toggleClientCard()">
+      <div class="card-title"><span class="icon">📋</span> Informations client</div>
+      <span class="card-chevron" id="clientCardChevron">▼</span>
+    </div>
+    <div id="clientCardBody">
+    <div class="client-grid">
+      <div class="client-field full-width">
+        <label>Organisateur</label>
+        <input type="text" id="f_organisateur" class="td-input" placeholder="Nom de l'organisation ou du client…" oninput="updateClient('organisateur', this.value)" />
+      </div>
+      <div class="client-field">
+        <label>Type d'organisateur</label>
+        <select id="f_typeOrganisateur" class="td-input" onchange="updateClient('typeOrganisateur', this.value)">
+          <option value="">— Choisir —</option>
+          <option value="Entreprise">Entreprise</option>
+          <option value="Service public">Service public</option>
+          <option value="Association">Association</option>
+          <option value="Parti politique">Parti politique</option>
+          <option value="Particulier">Particulier</option>
+        </select>
+      </div>
+      <div class="client-field">
+        <label>Type d'événement</label>
+        <select id="f_typeEvenement" class="td-input" onchange="updateClient('typeEvenement', this.value)">
+          <option value="">— Choisir —</option>
+          <option value="Privé">Privé</option>
+          <option value="Public">Public</option>
+        </select>
+      </div>
+      <div class="client-field">
+        <label>Date de l'événement</label>
+        <input type="date" id="f_dateEvenement" class="td-input" onchange="updateClient('dateEvenement', this.value)" style="color-scheme:dark" />
+      </div>
+      <div class="client-field">
+        <label>Heure de l'événement</label>
+        <input type="time" id="f_heureEvenement" class="td-input" onchange="updateClient('heureEvenement', this.value)" style="color-scheme:dark" />
+      </div>
+      <div class="client-field">
+        <label>Nombre de personnes (estimation)</label>
+        <input type="number" id="f_nbPersonnes" class="td-input" placeholder="0" min="0" oninput="updateClient('nbPersonnes', this.value)" />
+      </div>
+    </div>
+    <div class="contacts-section">
+      <div class="contacts-header"><span style="color:var(--red)">📞</span> Contacts (max. 3)</div>
+      <div class="contacts-grid">
+        <div class="contact-row">
+          <div class="contact-index">1</div>
+          <input type="text" id="c0_prenom" class="td-input contact-input" placeholder="Prénom" oninput="updateContact(0,'prenom',this.value)" />
+          <input type="text" id="c0_nom" class="td-input contact-input" placeholder="Nom" oninput="updateContact(0,'nom',this.value)" />
+          <input type="tel" id="c0_tel" class="td-input contact-input" placeholder="555-xxxx" oninput="updateContact(0,'tel',this.value)" />
+        </div>
+        <div class="contact-row">
+          <div class="contact-index">2</div>
+          <input type="text" id="c1_prenom" class="td-input contact-input" placeholder="Prénom" oninput="updateContact(1,'prenom',this.value)" />
+          <input type="text" id="c1_nom" class="td-input contact-input" placeholder="Nom" oninput="updateContact(1,'nom',this.value)" />
+          <input type="tel" id="c1_tel" class="td-input contact-input" placeholder="555-xxxx" oninput="updateContact(1,'tel',this.value)" />
+        </div>
+        <div class="contact-row">
+          <div class="contact-index">3</div>
+          <input type="text" id="c2_prenom" class="td-input contact-input" placeholder="Prénom" oninput="updateContact(2,'prenom',this.value)" />
+          <input type="text" id="c2_nom" class="td-input contact-input" placeholder="Nom" oninput="updateContact(2,'nom',this.value)" />
+          <input type="tel" id="c2_tel" class="td-input contact-input" placeholder="555-xxxx" oninput="updateContact(2,'tel',this.value)" />
+        </div>
+      </div>
+    </div>
+    </div><!-- /clientCardBody -->
+  </div>`;
+
+  // Category blocks grouped
+  d.groups.forEach(group => {
+    const groupCats = d.categories.filter(cat => CATALOGUE[cat.id]?.group === group.id);
+    const groupTotal = groupCats.reduce((s, cat) => s + calcCatTotal(cat), 0);
+    html += `<div class="group-block" id="group-${group.id}">
+      <div class="group-header${group.collapsed?' collapsed':''}" onclick="toggleGroup('${group.id}')">
+        <span class="group-icon">${group.icon}</span>
+        <span class="group-name">${escHtml(group.label)}</span>
+        <span class="group-total">${groupTotal > 0 ? fmt(groupTotal) : ''}</span>
+        <span class="group-chevron">▼</span>
+      </div>
+      <div class="group-body${group.collapsed?' hidden':''}">`;
+
+    groupCats.forEach(cat => {
+      const catMeta = CATALOGUE[cat.id] || {};
+      const catTotal = calcCatTotal(cat);
+      html += `<div class="category-block" id="catblock-${encodeId(cat.id)}">
+        <div class="category-header${cat.collapsed?' collapsed':''}" onclick="toggleCat('${escAttr(cat.id)}')">
+          <span class="cat-icon">${catMeta.icon || ''}</span>
+          <span class="cat-name">${escHtml(cat.id)}</span>
+          <span class="cat-total">${catTotal > 0 ? fmt(catTotal) : ''}</span>
+          <span class="cat-chevron">▼</span>
+        </div>
+        <div class="lines-table-wrap${cat.collapsed?' hidden':''}">
+          <table class="lines-table">
+            <thead>
+              <tr>
+                <th class="td-desc">Désignation</th>
+                <th class="td-unit">Prix unit.</th>
+                <th class="td-qty">Qté</th>
+                <th class="td-discount">Remise %</th>
+                <th class="td-total">Total</th>
+                <th class="td-actions"></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-${encodeId(cat.id)}">
+              ${cat.lines.map(l => renderLineHtml(l, cat.id)).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div class="add-row-bar${cat.collapsed?' hidden':''}">
+          ${CATALOGUE[cat.id]?.type === 'yesno'
+            ? `<button class="btn-add-line" onclick="addYesNoLine('${escAttr(cat.id)}')">+ Ajouter</button>`
+            : `<button class="btn-add-line" onclick="addFreeLine('${escAttr(cat.id)}')">+ Ajouter une entrée</button>`}
+        </div>
+      </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  pane.innerHTML = html;
+  syncClientFields(d);
+  updateTotals();
+}
+
+// Sync client field values without rebuilding DOM
+function syncClientFields(d) {
+  const set = (id, val) => { const el = document.getElementById(id); if (el && document.activeElement !== el) el.value = val || ''; };
+  const sel = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  set('f_organisateur', d.client.organisateur);
+  sel('f_typeOrganisateur', d.client.typeOrganisateur);
+  sel('f_typeEvenement', d.client.typeEvenement);
+  set('f_dateEvenement', d.client.dateEvenement);
+  set('f_heureEvenement', d.client.heureEvenement);
+  set('f_nbPersonnes', d.client.nbPersonnes);
+  [0,1,2].forEach(i => {
+    set('c'+i+'_prenom', d.client.contacts[i].prenom);
+    set('c'+i+'_nom', d.client.contacts[i].nom);
+    set('c'+i+'_tel', d.client.contacts[i].tel);
+  });
+}
+
+
+function renderLineHtml(line, catId) {
+  const catMeta = CATALOGUE[catId] || {};
+  const catType = catMeta.type || 'free';
+  const total = calcLineTotal(line);
+
+  if (catType === 'yesno') {
+    const checked = line.yesno ? 'checked' : '';
+    return `<tr id="line-${line.id}">
+      <td class="td-desc" colspan="4" style="padding:10px 14px">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+          <input type="checkbox" class="yesno-check" ${checked}
+            onchange="updateLine('${escAttr(catId)}','${line.id}','yesno',this.checked)" />
+          <span style="font-size:13px;color:var(--text)">${escHtml(line.name) || 'Inclus'}</span>
+        </label>
+      </td>
+      <td class="td-total"><span class="line-total-val">—</span></td>
+      <td class="td-actions">
+        <button class="btn-delete-line" onclick="deleteLine('${escAttr(catId)}','${line.id}')" title="Supprimer">×</button>
+      </td>
+    </tr>`;
+  }
+
+  const isFixed = catType === 'fixed';
+  const unitVal = isFixed ? (catMeta.fixedUnit || 0) : (line.unit || '');
+  const unitLabel = catMeta.unitLabel || '';
+
+  return `<tr id="line-${line.id}">
+    <td class="td-desc">
+      <input class="td-input" type="text" value="${escHtml(line.name)}" placeholder="Désignation…"
+        oninput="updateLine('${escAttr(catId)}','${line.id}','name',this.value)" />
+    </td>
+    <td class="td-unit" style="text-align:center">
+      ${isFixed
+        ? `<span style="font-size:13px;color:var(--gold)">${fmt(unitVal)}<span style="font-size:10px;color:var(--text3);margin-left:4px">${unitLabel}</span></span>`
+        : `<input class="td-input right" type="number" min="0" step="0.01" value="${unitVal}" placeholder="0.00"
+            oninput="updateLine('${escAttr(catId)}','${line.id}','unit',this.value)" />`
+      }
+    </td>
+    <td class="td-qty">
+      <input class="td-input right" type="number" min="0" step="1" value="${line.qty||''}" placeholder="1"
+        oninput="updateLine('${escAttr(catId)}','${line.id}','qty',this.value)" />
+    </td>
+    <td class="td-discount">
+      <input class="td-input right" type="number" min="0" max="100" step="1" value="${line.discount||''}" placeholder="0"
+        oninput="updateLine('${escAttr(catId)}','${line.id}','discount',this.value)" />
+    </td>
+    <td class="td-total">
+      <span class="line-total-val${total>0?' positive':''}">${total > 0 ? fmt(total) : '—'}</span>
+    </td>
+    <td class="td-actions">
+      <button class="btn-delete-line" onclick="deleteLine('${escAttr(catId)}','${line.id}')" title="Supprimer">×</button>
+    </td>
+  </tr>`;
+}
+
+// ════════════════════════════════════════
+// SUMMARY
+// ════════════════════════════════════════
+function renderSummary() {
+  const d = getCurrentDevis();
+  const catDiv = document.getElementById('summaryCategories');
+  if (!catDiv) return;
+
+  if (!d) {
+    catDiv.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0">Aucun devis actif</div>';
+    return;
+  }
+
+  catDiv.innerHTML = d.groups.map(group => {
+    const groupCats = d.categories.filter(cat => CATALOGUE[cat.id]?.group === group.id);
+    const groupTotal = groupCats.reduce((s, cat) => s + calcCatTotal(cat), 0);
+    return `<div class="summary-group-line">
+      <div class="summary-cat-label" style="font-weight:500">
+        <span class="icon">${group.icon}</span>
+        <span>${escHtml(group.label)}</span>
+      </div>
+      <span class="summary-cat-amount${groupTotal>0?' nonzero':''}">${groupTotal > 0 ? fmt(groupTotal) : '—'}</span>
+    </div>`;
+  }).join('');
+
+  // Set discount inputs
+  document.getElementById('globalDiscountPct').value = d.globalDiscountPct || 0;
+  document.getElementById('globalDiscountAbs').value = d.globalDiscountAbs || 0;
+
+  // Notes & status
+  document.getElementById('notesArea').value = d.notes || '';
+
+  updateTotals();
+}
+
+function updateTotals() {
+  const d = getCurrentDevis();
+  if (!d) return;
+
+  // Sync discount from inputs
+  d.globalDiscountPct = parseFloat(document.getElementById('globalDiscountPct').value) || 0;
+  d.globalDiscountAbs = parseFloat(document.getElementById('globalDiscountAbs').value) || 0;
+
+  const sub = calcSubtotal(d);
+  const disc = calcDiscount(d);
+  const grand = calcGrandTotal(d);
+
+  document.getElementById('subtotalDisplay').textContent = fmt(sub);
+  document.getElementById('grandTotalDisplay').textContent = fmt(grand);
+  document.getElementById('discountSaving').textContent = disc > 0 ? '−' + fmt(disc) : '—';
+
+  const discLine = document.getElementById('discountLineEl');
+  if (disc > 0) {
+    discLine.style.display = '';
+    document.getElementById('discountLineDisplay').textContent = '−' + fmt(disc);
+  } else {
+    discLine.style.display = 'none';
+  }
+
+  // Re-render cat totals in editor headers & summary
+  if (d) {
+    d.categories.forEach(cat => {
+      const catTotal = calcCatTotal(cat);
+      const headerEl = document.querySelector(`#catblock-${encodeId(cat.id)} .cat-total`);
+      if (headerEl) headerEl.textContent = catTotal > 0 ? fmt(catTotal) : '';
+    });
+    document.getElementById('summaryCategories').innerHTML = d.groups.map(group => {
+      const groupCats = d.categories.filter(cat => CATALOGUE[cat.id]?.group === group.id);
+      const groupTotal = groupCats.reduce((s, cat) => s + calcCatTotal(cat), 0);
+      return `<div class="summary-group-line">
+        <div class="summary-cat-label" style="font-weight:500">
+          <span class="icon">${group.icon}</span>
+          <span>${escHtml(group.label)}</span>
+        </div>
+        <span class="summary-cat-amount${groupTotal>0?' nonzero':''}">${groupTotal > 0 ? fmt(groupTotal) : '—'}</span>
+      </div>`;
+    }).join('');
+  }
+
+  renderSidebar();
+  saveAll();
+}
+
+// ════════════════════════════════════════
+// MUTATIONS
+// ════════════════════════════════════════
+function updateDevisField(field, val) {
+  const d = getCurrentDevis();
+  if (!d) return;
+  d[field] = val;
+  renderSidebar();
+}
+
+function updateClient(field, val) {
+  const d = getCurrentDevis();
+  if (!d) return;
+  d.client[field] = val;
+  if (field === 'typeOrganisateur') {
+    d.globalDiscountPct = (val === 'Association') ? 50 : 0;
+    const el = document.getElementById('globalDiscountPct');
+    if (el) { el.value = d.globalDiscountPct; }
+    updateTotals();
+  }
+}
+
+function updateContact(idx, field, val) {
+  const d = getCurrentDevis();
+  if (!d) return;
+  d.client.contacts[idx][field] = val;
+}
+
+function toggleClientCard() {
+  const body = document.getElementById('clientCardBody');
+  const chevron = document.getElementById('clientCardChevron');
+  if (!body) return;
+  const isHidden = body.classList.toggle('hidden');
+  if (chevron) chevron.style.transform = isHidden ? 'rotate(-90deg)' : '';
+}
+
+function toggleGroup(groupId) {
+  const d = getCurrentDevis();
+  if (!d) return;
+  const group = d.groups.find(g => g.id === groupId);
+  if (!group) return;
+  group.collapsed = !group.collapsed;
+  const header = document.querySelector(`#group-${groupId} .group-header`);
+  const body = document.querySelector(`#group-${groupId} .group-body`);
+  if (header) header.classList.toggle('collapsed', group.collapsed);
+  if (body) body.classList.toggle('hidden', group.collapsed);
+}
+
+function toggleCat(catId) {
+  const d = getCurrentDevis();
+  if (!d) return;
+  const cat = d.categories.find(c => c.id === catId);
+  if (!cat) return;
+  cat.collapsed = !cat.collapsed;
+  const header = document.querySelector(`#catblock-${encodeId(catId)} .category-header`);
+  const wrap = document.querySelector(`#catblock-${encodeId(catId)} .lines-table-wrap`);
+  const bar = document.querySelector(`#catblock-${encodeId(catId)} .add-row-bar`);
+  if (header) header.classList.toggle('collapsed', cat.collapsed);
+  if (wrap) wrap.classList.toggle('hidden', cat.collapsed);
+  if (bar) bar.classList.toggle('hidden', cat.collapsed);
+}
+
+function addYesNoLine(catId) {
+  const d = getCurrentDevis();
+  if (!d) return;
+  const cat = d.categories.find(c => c.id === catId);
+  if (!cat) return;
+  const line = { id: makeLineId(), catId: catId, name: '', yesno: false, unit: '', qty: '', discount: '', fromCatalogue: false };
+  cat.lines.push(line);
+  appendLineToTbody(catId, line);
+  updateTotals();
+}
+
+function addFreeLine(catId) {
+  const d = getCurrentDevis();
+  if (!d) return;
+  const cat = d.categories.find(c => c.id === catId);
+  if (!cat) return;
+  const line = { id: makeLineId(), catId: catId, name: '', unit: '', qty: '', discount: '', yesno: false, fromCatalogue: false };
+  cat.lines.push(line);
+  appendLineToTbody(catId, line);
+  updateTotals();
+}
+
+function addCatalogueLine(catId, preset) {
+  const d = getCurrentDevis();
+  if (!d) return;
+  const cat = d.categories.find(c => c.id === catId);
+  if (!cat) return;
+  const line = { id: makeLineId(), catId: catId, name: preset.name, unit: preset.unit, qty: 1, discount: '', yesno: false, fromCatalogue: true };
+  cat.lines.push(line);
+  appendLineToTbody(catId, line);
+  updateTotals();
+}
+
+function appendLineToTbody(catId, line) {
+  const tbody = document.getElementById('tbody-' + encodeId(catId));
+  if (!tbody) return;
+  const tr = document.createElement('tr');
+  tr.id = 'line-' + line.id;
+  if (line.fromCatalogue) tr.className = 'catalogue-row';
+  tr.innerHTML = renderLineHtml(line, catId).replace(/^<tr[^>]*>/, '').replace(/<\/tr>$/, '');
+  tbody.appendChild(tr);
+}
+
+function updateLine(catId, lineId, field, value) {
+  const d = getCurrentDevis();
+  if (!d) return;
+  const cat = d.categories.find(c => c.id === catId);
+  if (!cat) return;
+  const line = cat.lines.find(l => l.id === lineId);
+  if (!line) return;
+  line[field] = value;
+
+  // Update total cell
+  const total = calcLineTotal(line);
+  const tr = document.getElementById('line-' + lineId);
+  if (tr) {
+    const totalSpan = tr.querySelector('.line-total-val');
+    if (totalSpan) {
+      totalSpan.textContent = total > 0 ? fmt(total) : '—';
+      totalSpan.className = 'line-total-val' + (total > 0 ? ' positive' : '');
+    }
+  }
+  updateTotals();
+}
+
+function deleteLine(catId, lineId) {
+  const d = getCurrentDevis();
+  if (!d) return;
+  const cat = d.categories.find(c => c.id === catId);
+  if (!cat) return;
+  cat.lines = cat.lines.filter(l => l.id !== lineId);
+  const tr = document.getElementById('line-' + lineId);
+  if (tr) tr.remove();
+  updateTotals();
+}
+
+// ════════════════════════════════════════
+// CATALOGUE PICKER
+// ════════════════════════════════════════
+let _activeCatId = null;
+
+function openCatalogue(catId, btn) {
+  _activeCatId = catId;
+  const picker = document.getElementById('cataloguePicker');
+  const itemsEl = document.getElementById('catalogueItems');
+
+  // Build items for this category
+  const presets = CATALOGUE[catId] || [];
+  if (presets.length === 0) {
+    // Show all
+    itemsEl.innerHTML = Object.entries(CATALOGUE).map(([cat, items]) =>
+      `<div style="padding:6px 14px;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--text3);background:var(--bg4)">${cat}</div>` +
+      items.map(p => `<div class="catalogue-item" onclick="pickCatalogueItem(${JSON.stringify(p).replace(/'/g,"&#39;")})">
+        <span class="ci-name">${escHtml(p.name)}</span>
+        <span class="ci-price">${p.unit} ${p.unitLabel}</span>
+      </div>`).join('')
+    ).join('');
+  } else {
+    itemsEl.innerHTML = presets.map(p =>
+      `<div class="catalogue-item" onclick='pickCatalogueItem(${JSON.stringify(p)})'>
+        <span class="ci-name">${escHtml(p.name)}</span>
+        <span class="ci-price">${p.unit} ${p.unitLabel}</span>
+      </div>`
+    ).join('');
+  }
+
+  // Position near button
+  const rect = btn.getBoundingClientRect();
+  picker.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+  picker.style.left = (rect.left + window.scrollX) + 'px';
+  picker.classList.add('open');
+
+  setTimeout(() => {
+    document.addEventListener('click', closeCatalogueOnClick, { once: true });
+  }, 10);
+}
+
+function pickCatalogueItem(preset) {
+  addCatalogueLine(_activeCatId, preset);
+  document.getElementById('cataloguePicker').classList.remove('open');
+}
+
+function closeCatalogueOnClick(e) {
+  const picker = document.getElementById('cataloguePicker');
+  if (!picker.contains(e.target)) picker.classList.remove('open');
+}
+
+// ════════════════════════════════════════
+// EXPORT PNG / PDF  —  document A4 dédié
+// ════════════════════════════════════════
+
+function buildExportDoc(d, internal = false) {
+  // Construit un div A4 hors-écran avec les données du devis
+  const bg       = '#0d0d0d';
+  const bg2      = '#141414';
+  const bg3      = '#1a1a1a';
+  const border   = '#2a2a2a';
+  const red      = '#9a2243';
+  const redLight = '#b74162';
+  const text     = '#e8e0d8';
+  const text2    = '#a09890';
+  const text3    = '#6a6260';
+  const gold     = '#c9a96e';
+
+  const sub   = calcSubtotal(d);
+  const disc  = calcDiscount(d);
+  const grand = calcGrandTotal(d);
+
+  // Formater date lisible
+  const fmtDate = (iso) => {
+    if (!iso) return '—';
+    const [y,m,day] = iso.split('-');
+    return `${day}.${m}.${y}`;
+  };
+  const fmtTime = (t) => t || '—';
+
+  // Lignes des groupes avec contenu
+  const groupRows = d.groups.map(group => {
+    const groupCats = d.categories.filter(c => CATALOGUE[c.id]?.group === group.id);
+    const hasLines = groupCats.some(c => c.lines.length > 0);
+    if (!hasLines) return '';
+
+    let rows = '';
+    groupCats.forEach(cat => {
+      if (!cat.lines.length) return;
+      const catMeta = CATALOGUE[cat.id] || {};
+      const catType = catMeta.type || 'free';
+      const catTotal = calcCatTotal(cat);
+
+      rows += `<tr>
+        <td colspan="5" style="padding:6px 12px 2px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:${text3};background:${bg3}">${escHtml(cat.id)}</td>
+      </tr>`;
+
+      cat.lines.forEach(line => {
+        if (catType === 'yesno') {
+          rows += `<tr style="border-bottom:1px solid ${border}">
+            <td style="padding:7px 12px;color:${text};font-size:12px" colspan="3">${escHtml(line.name) || cat.id}</td>
+            <td style="padding:7px 12px;text-align:center;color:${line.yesno ? '#4a9e6e' : text3};font-size:12px" colspan="2">${line.yesno ? '✓ Oui' : '✗ Non'}</td>
+          </tr>`;
+        } else {
+          const unit = catType === 'fixed' ? (catMeta.fixedUnit || 0) : (parseFloat(line.unit) || 0);
+          const qty  = parseFloat(line.qty) || 0;
+          const disc = parseFloat(line.discount) || 0;
+          const total = calcLineTotal(line);
+          rows += `<tr style="border-bottom:1px solid ${border}">
+            <td style="padding:7px 12px;color:${text};font-size:12px">${escHtml(line.name) || '—'}</td>
+            <td style="padding:7px 12px;text-align:center;color:${gold};font-size:12px">${unit ? fmt(unit) : '—'}<span style="font-size:9px;color:${text3};margin-left:4px">${catMeta.unitLabel||''}</span></td>
+            <td style="padding:7px 12px;text-align:center;color:${text2};font-size:12px">${qty || '—'}</td>
+            <td style="padding:7px 12px;text-align:center;color:${text2};font-size:12px">${disc ? disc+'%' : '—'}</td>
+            <td style="padding:7px 12px;text-align:right;color:${total>0?gold:text3};font-size:12px;font-weight:600">${total > 0 ? fmt(total) : '—'}</td>
+          </tr>`;
+        }
+      });
+
+      rows += `<tr style="border-bottom:2px solid ${border}">
+        <td colspan="4" style="padding:5px 12px;text-align:right;font-size:10px;color:${text3};letter-spacing:.1em;text-transform:uppercase">Sous-total ${escHtml(cat.id)}</td>
+        <td style="padding:5px 12px;text-align:right;color:${gold};font-size:13px;font-weight:600">${catTotal > 0 ? fmt(catTotal) : '—'}</td>
+      </tr>`;
+    });
+
+    const groupTotal = groupCats.reduce((s, c) => s + calcCatTotal(c), 0);
+    return `
+      <tr>
+        <td colspan="5" style="padding:10px 12px 6px;background:rgba(154,34,67,0.15);border-top:2px solid ${red}">
+          <span style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:${text}">${group.icon} ${escHtml(group.label)}</span>
+          <span style="float:right;font-size:14px;color:${gold};font-weight:600">${groupTotal > 0 ? fmt(groupTotal) : ''}</span>
+        </td>
+      </tr>
+      ${rows}`;
+  }).join('');
+
+  // Contacts non vides
+  const contacts = d.client.contacts.filter(c => c.prenom || c.nom || c.tel);
+  const contactsHtml = contacts.length ? contacts.map(c =>
+    `<div style="font-size:12px;color:${text2};margin-bottom:3px">
+       ${escHtml(c.prenom)} ${escHtml(c.nom)}${c.tel ? ' — ' + escHtml(c.tel) : ''}
+     </div>`
+  ).join('') : `<span style="color:${text3};font-size:12px">—</span>`;
+
+  const html = `
+  <div id="exportDoc" style="
+    width:794px;
+    background:${bg};
+    color:${text};
+    font-family:'Jost',sans-serif;
+    font-weight:300;
+    padding:0;
+    box-sizing:border-box;
+  ">
+    <!-- BANDEAU INTERNE -->
+    ${internal ? `<div style="background:${red};padding:6px 40px;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.8);font-weight:500">🔒 Document à usage interne — ne pas transmettre au client</div>` : ''}
+
+    <!-- EN-TÊTE -->
+    <div style="background:${bg2};border-bottom:3px solid ${red};padding:28px 40px 20px;display:flex;align-items:flex-end;justify-content:space-between">
+      <div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:600;color:${text};letter-spacing:.04em;line-height:1">Château Marius</div>
+        <div style="font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:${red};margin-top:5px">Devis Événements</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:${text};font-weight:400">${escHtml(d.name) || 'Devis sans titre'}</div>
+        <div style="font-size:11px;color:${text3};margin-top:3px">Créé par ${escHtml(d.employe) || '—'} · ${fmtDate(d.dateCreation)}</div>
+      </div>
+    </div>
+
+    <!-- INFOS CLIENT -->
+    <div style="padding:20px 40px;background:${bg2};border-bottom:1px solid ${border}">
+      <div style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:${text};margin-bottom:12px">Informations client</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 32px">
+        <div>
+          <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:${text3};margin-bottom:3px">Organisateur</div>
+          <div style="font-size:13px;color:${text}">${escHtml(d.client.organisateur) || '—'}</div>
+        </div>
+        <div>
+          <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:${text3};margin-bottom:3px">Type d'organisateur</div>
+          <div style="font-size:13px;color:${text}">${escHtml(d.client.typeOrganisateur) || '—'}</div>
+        </div>
+        <div>
+          <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:${text3};margin-bottom:3px">Date & heure de l'événement</div>
+          <div style="font-size:13px;color:${text}">${fmtDate(d.client.dateEvenement)} à ${fmtTime(d.client.heureEvenement)}</div>
+        </div>
+        <div>
+          <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:${text3};margin-bottom:3px">Personnes · Type</div>
+          <div style="font-size:13px;color:${text}">${d.client.nbPersonnes || '—'} pers. · ${escHtml(d.client.typeEvenement) || '—'}</div>
+        </div>
+        <div style="grid-column:1/-1">
+          <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:${text3};margin-bottom:5px">Contacts</div>
+          ${contactsHtml}
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLEAU DES PRESTATIONS -->
+    <div style="padding:20px 40px 0">
+      <div style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:${text};margin-bottom:12px">Prestations</div>
+      <table style="width:100%;border-collapse:collapse;font-family:'Jost',sans-serif">
+        <thead>
+          <tr style="background:${bg3};border-bottom:1px solid ${border}">
+            <th style="padding:8px 12px;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:${text};text-align:left;font-weight:500">Désignation</th>
+            <th style="padding:8px 12px;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:${text};text-align:center;font-weight:500">Prix unit.</th>
+            <th style="padding:8px 12px;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:${text};text-align:center;font-weight:500">Qté</th>
+            <th style="padding:8px 12px;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:${text};text-align:center;font-weight:500">Remise</th>
+            <th style="padding:8px 12px;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:${text};text-align:right;font-weight:500">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${groupRows}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- NOTES INTERNES -->
+    ${internal && d.notes ? `
+    <div style="padding:16px 40px;background:${bg2};border-top:1px solid ${border};border-bottom:1px solid ${border}">
+      <div style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:${text};margin-bottom:10px">🔒 Notes internes</div>
+      <div style="font-size:12px;color:${text2};white-space:pre-wrap;line-height:1.6">${escHtml(d.notes)}</div>
+    </div>` : ''}
+
+    <!-- TOTAUX -->
+    <div style="padding:20px 40px 32px;margin-top:8px">
+      <div style="margin-left:auto;width:280px">
+        <div style="display:flex;justify-content:space-between;padding:9px 16px;border-bottom:1px solid ${border}">
+          <span style="font-size:12px;color:${text}">Sous-total</span>
+          <span style="font-size:14px;color:${text};font-family:'Cormorant Garamond',serif;font-weight:600">${fmt(sub)}</span>
+        </div>
+        ${disc > 0 ? `<div style="display:flex;justify-content:space-between;padding:9px 16px;border-bottom:1px solid ${border}">
+          <span style="font-size:12px;color:${text}">Remise${d.globalDiscountPct ? ' ('+d.globalDiscountPct+'%)' : ''}</span>
+          <span style="font-size:14px;color:${redLight};font-family:'Cormorant Garamond',serif;font-weight:600">−${fmt(disc)}</span>
+        </div>` : ''}
+        <div style="display:flex;justify-content:space-between;padding:14px 16px;background:${red};border-radius:0 0 6px 6px">
+          <span style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500;letter-spacing:.06em;text-transform:uppercase">Total général</span>
+          <span style="font-size:22px;color:white;font-family:'Cormorant Garamond',serif;font-weight:600">${fmt(grand)}</span>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1';
+  wrapper.innerHTML = html;
+  document.body.appendChild(wrapper);
+  return wrapper;
+}
+
+async function captureExportDoc(internal = false) {
+  const d = getCurrentDevis();
+  if (!d) return null;
+
+  const wrapper = buildExportDoc(d, internal);
+  await new Promise(r => setTimeout(r, 120));
+
+  const target = wrapper.querySelector('#exportDoc');
+  const canvas = await html2canvas(target, {
+    backgroundColor: '#0d0d0d',
+    scale: 2,
+    useCORS: true,
+    logging: false,
+    width: 794,
+    windowWidth: 794,
+  });
+
+  document.body.removeChild(wrapper);
+  return canvas;
+}
+
+async function exportPNG(internal = false) {
+  const btnId = internal ? 'btnPngInternal' : 'btnPng';
+  const btn = document.getElementById(btnId);
+  const origText = btn.textContent;
+  btn.textContent = '⏳ Export…';
+  btn.disabled = true;
+  try {
+    const canvas = await captureExportDoc(internal);
+    if (!canvas) return;
+    const link = document.createElement('a');
+    const d = getCurrentDevis();
+    const suffix = internal ? '_interne' : '_client';
+    link.download = (d?.name || 'devis').replace(/[^a-z0-9]/gi, '_') + suffix + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast(internal ? 'Export interne téléchargé !' : 'Export client téléchargé !');
+  } catch(e) {
+    showToast('Erreur export PNG');
+    console.error(e);
+  }
+  btn.textContent = origText;
+  btn.disabled = false;
+}
+
+// ════════════════════════════════════════
+// SYNC STATE (pas de persistence)
+// ════════════════════════════════════════
+function saveAll() {
+  const d = getCurrentDevis();
+  if (d) {
+    d.notes = document.getElementById('notesArea')?.value || d.notes;
+    }
+  // Pas de localStorage — données en mémoire uniquement
+}
+
+// ════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s) { return String(s||'').replace(/'/g,'&#39;'); }
+function encodeId(s) { return String(s||'').replace(/[^a-zA-Z0-9]/g,'_'); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  createDevis();
+});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</body>
+</html>
