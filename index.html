@@ -968,9 +968,16 @@
       <div class="devis-list" id="duvisList"></div>
     </div>
 
-    <div class="sidebar-bottom">
-      <div class="version">v1.0 — Château Marius</div>
+    <div style="display:flex;gap:6px;padding:0 16px 12px;">
+      <button class="btn-new-devis" onclick="createDevis()" style="margin:0;flex:1">+ Nouveau</button>
+      <button class="btn-icon" onclick="loadFromSupabase()" title="Rafraîchir" style="flex-shrink:0;width:34px;height:34px">🔄</button>
     </div>
+
+    <div class="sidebar-bottom">
+      <div id="syncStatus" style="font-size:10px;text-align:center;margin-bottom:6px;color:var(--text3)">—</div>
+      <div class="version">v1.1 — Château Marius</div>
+    </div>
+
   </aside>
 
   <!-- MAIN -->
@@ -986,8 +993,9 @@
         </div>
       </div>
       <div class="topbar-actions">
+        <button class="btn-icon" onclick="saveCurrentDevis()" title="Sauvegarder" id="btnSave">💾</button>
         <button class="btn-print" onclick="exportPNG(false)" id="btnPng">🖼️ Export client</button>
-        <button class="btn-print" onclick="exportPNG(true)" id="btnPngInternal" style="background:var(--bg4);border-color:rgba(154,34,67,0.4)">🔒 Usage interne</button>
+        <button class="btn-print" onclick="exportPNG(true)" id="btnPngInternal" style="background:var(--bg4);border:1px solid rgba(154,34,67,0.4)">🔒 Usage interne</button>
       </div>
     </div>
 
@@ -1068,6 +1076,27 @@
 
 <script>
 // ════════════════════════════════════════
+// SUPABASE CONFIG
+// ════════════════════════════════════════
+const SUPA_URL = 'https://mbnguuvxuiqzbubherow.supabase.co';
+const SUPA_KEY = 'sb_publishable_QimiTOsmIM9IQHYLulEszw_qse5EV6c'; // clé anon publique
+
+async function supaFetch(path, options = {}) {
+  const res = await fetch(SUPA_URL + path, {
+    ...options,
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': options.prefer || '',
+      ...(options.headers || {}),
+    },
+  });
+  if (!res.ok) { const e = await res.text(); throw new Error(e); }
+  const txt = await res.text();
+  return txt ? JSON.parse(txt) : null;
+}
+// ════════════════════════════════════════
 // CATALOGUE DE PRESTATIONS
 // ════════════════════════════════════════
 // Groupes de catégories
@@ -1119,7 +1148,7 @@ function createDevis() {
   const d = {
     id: makeId(),
     name: "",
-    employe: "",
+    employe: state.employe || '',
     dateCreation: today,
     client: {
       organisateur: "",
@@ -1161,6 +1190,7 @@ function deleteDevis(id, e) {
   if (state.devisList.length === 1) { showToast("Impossible de supprimer le dernier devis"); return; }
   if (!confirm("Supprimer ce devis ?")) return;
   state.devisList = state.devisList.filter(d => d.id !== id);
+  deleteDevisRemote(id);
   if (state.currentId === id) {
     state.currentId = state.devisList[0]?.id || null;
   }
@@ -1230,8 +1260,9 @@ function renderSidebar() {
     const total = calcGrandTotal(d);
     el.innerHTML = `
       <div class="devis-dot"></div>
-      <div class="devis-name">${escHtml(d.name)}</div>
+      <div class="devis-name">${escHtml(d.name) || 'Sans titre'}</div>
       <div class="devis-total-badge">${total > 0 ? fmt(total) : ''}</div>
+      <button class="delete-devis-btn" onclick="deleteDevis('${d.id}', event)" title="Supprimer">×</button>
     `;
     list.appendChild(el);
   });
@@ -1255,12 +1286,13 @@ function renderEditor() {
   document.getElementById('topbarEmploye').value = d.employe || '';
   document.getElementById('topbarDateCreation').value = d.dateCreation || '';
 
-  // If already rendered, just sync values without rebuilding DOM
-  if (pane.querySelector('.card')) {
-    syncClientFields(d);
-    updateTotals();
-    return;
-  }
+// Rebuild si le devis affiché a changé
+if (pane.querySelector('.card') && pane.dataset.renderedId === d.id) {
+  syncClientFields(d);
+  updateTotals();
+  return;
+}
+pane.dataset.renderedId = d.id;
 
   // Build sections (first render only)
   let html = '';
@@ -1981,12 +2013,116 @@ async function exportPNG(internal = false) {
 // ════════════════════════════════════════
 // SYNC STATE (pas de persistence)
 // ════════════════════════════════════════
+// ════════════════════════════════════════
+// PERSISTENCE SUPABASE
+// ════════════════════════════════════════
+let _saveTimer = null;
+
+// Sauvegarde manuelle du devis courant uniquement
+async function saveCurrentDevis() {
+  const d = getCurrentDevis();
+  if (!d) return;
+  d.notes = document.getElementById('notesArea')?.value || d.notes;
+
+  const btn = document.getElementById('btnSave');
+  const orig = btn.textContent;
+  btn.textContent = '⏳';
+  btn.disabled = true;
+
+  try {
+    await supaFetch('/rest/v1/devis', {
+      method: 'POST',
+      prefer: 'resolution=merge-duplicates',
+      body: JSON.stringify({
+        id: d.id,
+        name: d.name || '',
+        employe: d.employe || '',
+        data: d,
+        updated_at: new Date().toISOString(),
+      }),
+    });
+    setSyncStatus('saved');
+    showToast('Devis sauvegardé !');
+  } catch(e) {
+    setSyncStatus('error');
+    showToast('Erreur de sauvegarde');
+    console.error(e);
+  }
+
+  btn.textContent = orig;
+  btn.disabled = false;
+}
+
+// Rafraîchir depuis Supabase
+async function loadFromSupabase() {
+  setSyncStatus('loading');
+  try {
+    const rows = await supaFetch('/rest/v1/devis?select=*&order=updated_at.desc');
+    if (rows && rows.length > 0) {
+      state.devisList = rows.map(r => r.data);
+      // Garder le devis courant si possible, sinon prendre le premier
+      const stillExists = state.devisList.find(d => d.id === state.currentId);
+      state.currentId = stillExists ? state.currentId : state.devisList[0].id;
+    }
+    setSyncStatus('saved');
+    showToast('Liste mise à jour');
+  } catch(e) {
+    setSyncStatus('error');
+    showToast('Erreur de chargement');
+    console.error(e);
+  }
+  renderSidebar();
+  renderEditor();
+  renderSummary();
+}
+
+async function deleteDevisRemote(id) {
+  try {
+    await supaFetch(`/rest/v1/devis?id=eq.${id}`, { method: 'DELETE' });
+  } catch(e) { console.error('Delete error:', e); }
+}
+
+function setSyncStatus(status) {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  const map = {
+    saving: { text: '⏳ Sync…',  color: 'var(--text3)' },
+    saved:  { text: '✓ Sauvegardé', color: 'var(--success)' },
+    error:  { text: '✗ Erreur sync', color: 'var(--red-light)' },
+    loading:{ text: '⏳ Chargement…', color: 'var(--text3)' },
+  };
+  const s = map[status] || map.saved;
+  el.textContent = s.text;
+  el.style.color = s.color;
+}
+
 function saveAll() {
   const d = getCurrentDevis();
-  if (d) {
-    d.notes = document.getElementById('notesArea')?.value || d.notes;
+  if (d) d.notes = document.getElementById('notesArea')?.value || d.notes;
+
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(async () => {
+    const d = getCurrentDevis();
+    if (!d) return;
+    setSyncStatus('saving');
+    try {
+      await supaFetch('/rest/v1/devis', {
+        method: 'POST',
+        prefer: 'resolution=merge-duplicates',
+        body: JSON.stringify({
+          id: d.id,
+          name: d.name || '',
+          employe: d.employe || '',
+          data: d,
+          updated_at: new Date().toISOString(),
+        }),
+      });
+      setSyncStatus('saved');
+    } catch(e) {
+      setSyncStatus('error');
+      console.error(e);
     }
-  // Pas de localStorage — données en mémoire uniquement
+  }, 800);
 }
 
 // ════════════════════════════════════════
@@ -2006,9 +2142,80 @@ function showToast(msg) {
 // ════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
-  createDevis();
+document.addEventListener('DOMContentLoaded', async () => {
+  // ── LOGIN ──
+  let employe = sessionStorage.getItem('cm_employe');
+  if (!employe) {
+    employe = await showLoginScreen();
+  }
+  state.employe = employe;
+
+  // ── CHARGEMENT SUPABASE ──
+  setSyncStatus('loading');
+  try {
+    const rows = await supaFetch('/rest/v1/devis?select=*&order=updated_at.desc');
+    if (rows && rows.length > 0) {
+      state.devisList = rows.map(r => r.data);
+      state.currentId = state.devisList[0].id;
+    } else {
+      createDevis();
+    }
+  } catch(e) {
+    console.error('Load error:', e);
+    createDevis();
+  }
+  setSyncStatus('saved');
+  renderSidebar();
+  renderEditor();
+  renderSummary();
 });
+
+function showLoginScreen() {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position:fixed;inset:0;z-index:9999;
+      background:#0d0d0d;
+      display:flex;align-items:center;justify-content:center;
+    `;
+    overlay.innerHTML = `
+      <div style="
+        background:#141414;border:1px solid #2a2a2a;border-radius:12px;
+        padding:40px 48px;width:360px;text-align:center;
+      ">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:26px;color:#e8e0d8;margin-bottom:4px">Château Marius</div>
+        <div style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#9a2243;margin-bottom:28px">Devis Événements</div>
+        <div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#6a6260;margin-bottom:10px;text-align:left">Votre nom</div>
+        <input id="loginInput" type="text" placeholder="Prénom Nom…" style="
+          width:100%;background:#1a1a1a;border:1px solid #333;border-radius:6px;
+          color:#e8e0d8;font-family:'Jost',sans-serif;font-size:14px;
+          padding:11px 14px;outline:none;box-sizing:border-box;margin-bottom:16px;
+        " />
+        <button id="loginBtn" style="
+          width:100%;background:#9a2243;border:none;border-radius:6px;
+          color:white;font-family:'Jost',sans-serif;font-size:12px;font-weight:500;
+          letter-spacing:.08em;text-transform:uppercase;padding:12px;cursor:pointer;
+        ">Accéder →</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const input = overlay.querySelector('#loginInput');
+    const btn = overlay.querySelector('#loginBtn');
+    input.focus();
+
+    const confirm = () => {
+      const val = input.value.trim();
+      if (!val) { input.style.borderColor = '#9a2243'; return; }
+      sessionStorage.setItem('cm_employe', val);
+      document.body.removeChild(overlay);
+      resolve(val);
+    };
+
+    btn.addEventListener('click', confirm);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') confirm(); });
+  });
+}
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
