@@ -975,7 +975,7 @@
 
     <div class="sidebar-bottom">
       <div id="syncStatus" style="font-size:10px;text-align:center;margin-bottom:6px;color:var(--text3)">—</div>
-      <div class="version">v1.1 — Château Marius</div>
+      <div class="version">v1.2 — Château Marius</div>
     </div>
 
   </aside>
@@ -1221,7 +1221,13 @@ function calcLineTotal(line) {
   const catType = catMeta.type || 'free';
   if (catType === 'yesno') return 0;
   const unit = catType === 'fixed' ? (catMeta.fixedUnit || 0) : (parseFloat(line.unit) || 0);
-  const sub = unit * (parseFloat(line.qty) || 0);
+  // Qté vide = 1 par défaut (aligné sur le placeholder "1" affiché à l'écran).
+  // Sans ça, une ligne où on ne remplit que le prix restait à 0 $ tant que
+  // personne ne tapait explicitement "1" dans le champ Qté.
+  const qty = (line.qty === '' || line.qty === null || line.qty === undefined)
+    ? 1
+    : (parseFloat(line.qty) || 0);
+  const sub = unit * qty;
   const disc = Math.min(parseFloat(line.discount) || 0, 100);
   return sub * (1 - disc / 100);
 }
@@ -1824,7 +1830,7 @@ function buildExportDoc(d, internal = false) {
           </tr>`;
         } else {
           const unit = catType === 'fixed' ? (catMeta.fixedUnit || 0) : (parseFloat(line.unit) || 0);
-          const qty  = parseFloat(line.qty) || 0;
+          const qty  = (line.qty === '' || line.qty === null || line.qty === undefined) ? 1 : (parseFloat(line.qty) || 0);
           const disc = parseFloat(line.discount) || 0;
           const total = calcLineTotal(line);
           rows += `<tr style="border-bottom:1px solid ${border}">
